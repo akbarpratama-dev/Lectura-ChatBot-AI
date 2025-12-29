@@ -165,7 +165,8 @@
         width: 100%;
         padding: var(--spacing-sm);
         color: var(--color-primary);
-        border-color: 1px #191925;
+        background: #fff;
+        border: 1px solid #191925;
         border-radius: var(--radius-xl);
         font-size: var(--font-size-sm);
         font-weight: 500;
@@ -322,6 +323,9 @@
         border-radius: 50px;
         font-size: var(--font-size-sm);
         color: var(--color-text-secondary);
+        border: none;
+        outline: none;
+        box-shadow: none;
       }
 
       .database-indicator i {
@@ -750,7 +754,8 @@
         border: none;
         background: transparent;
         font-family: var(--font-family);
-        font-size: var(--font-size-sm);
+        font-size: var(--font-size-md);
+        font-weight: 500;
         color: var(--color-text-primary);
         resize: none;
         outline: none;
@@ -868,6 +873,10 @@
 
         .welcome-screen {
           padding: var(--spacing-lg);
+          flex: 1;
+          min-height: 0;
+          overflow-y: auto;
+          /* Agar bisa di-scroll di mode mobile */
         }
 
         .welcome-title {
@@ -1045,16 +1054,21 @@
       }
 
       /* ==================== BUBBLE UPLOAD STATUS ==================== */
-      .bubble-upload-success {
-        background-color: #d1e7dd;
-        border: 1px solid #badbcc;
-        color: #0f5132;
+      /* FORCE upload status bubble color override (support .bubble & custom bubble) */
+      .bubble.bubble-upload-success,
+      .bubble-upload-success,
+      .custom-bubble.bubble-upload-success {
+        background-color: #d1e7dd !important;
+        border: 1px solid #badbcc !important;
+        color: #0f5132 !important;
       }
 
-      .bubble-upload-error {
-        background-color: #f8d7da;
-        border: 1px solid #f5c2c7;
-        color: #842029;
+      .bubble.bubble-upload-error,
+      .bubble-upload-error,
+      .custom-bubble.bubble-upload-error {
+        background-color: #f8d7da !important;
+        border: 1px solid #f5c2c7 !important;
+        color: #842029 !important;
       }
       /* ==================== FILE HISTORY MODAL ==================== */
       .file-history-modal {
@@ -1337,7 +1351,7 @@
                   <h2 class="welcome-title" style="text-align: left">Halo, <span class="user-name">Akbar</span></h2>
 
                   <p class="welcome-description" style="text-align: left">
-                    Kenalin, aku Lektura AI—teman pintarmu buat ngerjain
+                    Kenalin, aku Lektura AI teman pintarmu buat ngerjain
                     <span id="textLoop" class="text-loop-wrapper"> </span>
                   </p>
                 </div>
@@ -1758,8 +1772,14 @@
         const file = els.fileInput.files[0];
         if (!file) return;
 
-        const tempMsg = `Sedang mengupload dokumen: "${file.name}"...`;
-        appendMessageUI("bot", tempMsg);
+        // Tambahkan bubble loading sementara
+        const uploadBubbleId = "uploading-" + Date.now();
+        const div = document.createElement("div");
+        div.id = uploadBubbleId;
+        div.className = "message-wrapper bot-message uploading";
+        div.innerHTML = `<div class=\"bubble\"><div class=\"message-content\">Sedang mengupload dokumen: \"${file.name}\"...</div></div>`;
+        els.chatMessages.appendChild(div);
+        scrollToBottom();
 
         if (!els.welcome.classList.contains("hidden")) {
           els.welcome.style.opacity = "0";
@@ -1774,16 +1794,21 @@
 
         try {
           const res = await fetch(N8N_UPLOAD_URL, { method: "POST", body: formData });
+          // Hapus bubble upload setelah proses selesai
+          const bubble = document.getElementById(uploadBubbleId);
+          if (bubble) bubble.remove();
           if (res.ok) {
-            const successMsg = `✅ Dokumen "${file.name}" berhasil dipelajari. Silakan bertanya.`;
+            const successMsg = `Dokumen \"${file.name}\" berhasil dipelajari. Silakan bertanya.`;
             appendMessageUI("bot", successMsg, true, "success");
             sessions[currentSessionId].messages.push({ role: "bot", content: successMsg });
             saveToLocal();
             saveFileHistory(file.name); // Tambahkan ke riwayat file
           } else {
-            throw new Error("Upload Gagal");
+            appendMessageUI("bot", "❌ Upload gagal. Periksa koneksi atau format file.", true, "error");
           }
         } catch (err) {
+          const bubble = document.getElementById(uploadBubbleId);
+          if (bubble) bubble.remove();
           appendMessageUI("bot", "❌ Upload gagal. Periksa koneksi atau format file.", true, "error");
         }
         els.fileInput.value = "";
