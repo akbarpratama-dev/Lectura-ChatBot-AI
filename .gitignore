@@ -1,0 +1,6 @@
+# Contoh isi .gitignore
+node_modules/
+.env
+*.log
+*.DS_Store
+Telegram AI bot with LangChain nodes (3).json
