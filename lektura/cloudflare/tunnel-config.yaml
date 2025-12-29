@@ -1,0 +1,14 @@
+# Cloudflare Tunnel Configuration
+# Project: Lectura ChatBot AI
+# Student: Muhammad Akbar Pratama
+
+tunnel: n8n-tunnel
+credentials-file: /Users/muhammadakbarpratama/.cloudflared/cert.pem
+
+ingress:
+  # Routing utama untuk Dashboard n8n dan Webhook
+  - hostname: n8n.lectura.my.id
+    service: http://localhost:5678
+
+  # Catch-all rule (blokir request ke subdomain yang tidak dikenali)
+  - service: http_status:404
