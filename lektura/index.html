@@ -419,7 +419,7 @@
       }
 
       .welcome-title {
-        font-size: 60px;
+        font-size: 50px;
         font-weight: 600;
         color: var(--color-text-primary);
         margin-bottom: var(--spacing-xs);
@@ -1266,6 +1266,52 @@
         transform: translateY(-20px); /* Keluar ke atas */
         z-index: 1;
       }
+
+      /* ==================== WELCOME TITLE ANIMATION ==================== */
+      .welcome-title-animated {
+        display: inline-block;
+        position: relative;
+        min-height: 1.5em;
+      }
+
+      .welcome-title-animated .sentence-wrapper {
+        display: inline-block;
+        overflow: hidden;
+        vertical-align: bottom;
+      }
+
+      .welcome-title-animated .sentence {
+        display: inline-block;
+        opacity: 0;
+        transform: translateX(-20px);
+        animation: fadeLeftIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      }
+
+      @keyframes fadeLeftIn {
+        0% {
+          opacity: 0;
+          transform: translateX(-20px);
+        }
+        100% {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+
+      @keyframes fadeLeftOut {
+        0% {
+          opacity: 1;
+          transform: translateX(0);
+        }
+        100% {
+          opacity: 0;
+          transform: translateX(20px);
+        }
+      }
+
+      .welcome-title-animated .sentence.exit {
+        animation: fadeLeftOut 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      }
     </style>
   </head>
   <body>
@@ -1348,7 +1394,7 @@
               <!-- Welcome Header -->
               <div class="welcome-header" style="flex: 1; display: flex; flex-direction: row; align-items: center; gap: 3px">
                 <div class="welcome-text" style="flex: 1; text-align: left">
-                  <h2 class="welcome-title" style="text-align: left">Halo, <span class="user-name">Akbar</span></h2>
+                  <h2 class="welcome-title welcome-title-animated" id="welcomeTitle" style="text-align: left"></h2>
 
                   <p class="welcome-description" style="text-align: left">
                     Kenalin, aku Lektura AI teman pintarmu buat ngerjain
@@ -1905,6 +1951,72 @@
       }
 
       // ==========================================
+      // WELCOME TITLE ANIMATION (ONE LOOP ONLY)
+      // ==========================================
+      function initWelcomeTitleAnimation() {
+        const titleEl = document.getElementById("welcomeTitle");
+        if (!titleEl) return;
+
+        // Array of messages to cycle through (only once)
+        const messages = [
+          { text: "Halo, ", highlight: "Akbar" },
+          { text: "Halo, ", highlight: "Salma" },
+          { text: "Selamat datang", highlight: "" },
+        ];
+
+        let currentMsgIndex = 0;
+        const displayDuration = 2000; // How long each message stays (2s)
+        const transitionDuration = 500; // Animation duration (0.8s)
+
+        function displayMessage(index) {
+          if (index >= messages.length) {
+            // Loop completed, keep last message
+            return;
+          }
+
+          const msg = messages[index];
+          titleEl.innerHTML = "";
+
+          // Create container for the full sentence
+          const wrapper = document.createElement("span");
+          wrapper.className = "sentence-wrapper";
+
+          const span = document.createElement("span");
+          span.className = "sentence";
+
+          // Combine text and highlight
+          const fullText = msg.text + (msg.highlight || "");
+          span.textContent = fullText;
+
+          // If there's a highlight, we can still style parts if needed,
+          // but for "one sentence" fade, we keep it simple or use innerHTML.
+          if (msg.highlight) {
+            // Option to keep highlight styling if needed:
+            span.innerHTML = `${msg.text}<span class="user-name">${msg.highlight}</span>`;
+          }
+
+          wrapper.appendChild(span);
+          titleEl.appendChild(wrapper);
+
+          // Schedule next message after display duration
+          if (index < messages.length - 1) {
+            setTimeout(() => {
+              // Add exit animation to the sentence
+              span.classList.add("exit");
+
+              // Display next message after exit animation completes
+              setTimeout(() => {
+                displayMessage(index + 1);
+              }, transitionDuration);
+            }, displayDuration);
+          }
+        }
+
+        // Start the animation
+        displayMessage(0);
+      }
+
+      // ==========================================
       // JALANKAN SAAT LOAD
       // ==========================================
       // Tambahkan baris ini di bagian paling bawah script, setelah inisialisasi lainnya
@@ -1912,6 +2024,9 @@
         // Kata-kata yang ingin di-loop
         const loopWords = ["skripsi", "jurnal", "riset", "tugas akhir", "paper"];
         initTextLoop("textLoop", loopWords, 2500); // Ganti tiap 2.5 detik
+
+        // Initialize welcome title animation (one loop only)
+        initWelcomeTitleAnimation();
       });
     </script>
   </body>
